@@ -5,18 +5,13 @@ import qualified Data.Char as Char
 
 data Direction = Forward | Down | Up deriving (Eq, Show, Read)
 
-calculateDepth :: Num a => [(Direction, a)] -> a
-calculateDepth [] = 0
-calculateDepth ((x,y):xs) 
-  | x == Down    = calculateDepth xs + y
-  | x == Up      = calculateDepth xs - y
-  | otherwise    = calculateDepth xs
 
-calculatePosition :: Num p => [(Direction, p)] -> p
-calculatePosition [] = 0
-calculatePosition ((x,y):xs)
-  | x == Forward = y + calculatePosition xs
-  | otherwise    = calculatePosition xs
+calculateAdvanced :: Num a => a -> a -> a -> [(Direction, a)] -> a
+calculateAdvanced _ d p [] = d * p
+calculateAdvanced a d p ((x,y):xs) 
+  | x == Down       = calculateAdvanced (a + y) d p xs
+  | x == Up         = calculateAdvanced (a - y) d p xs
+  | x == Forward    = calculateAdvanced a (d + (a * y)) (p + y) xs
 
 tuplify2 :: [a] -> (a,a)
 tuplify2 [x,y] = (x,y)
@@ -33,7 +28,5 @@ main = do
         let singlelines = lines contents
             list = map ((\(x,y) -> (read x :: Direction, read y :: Integer)) . (\(x,y) -> (capitalized x, y)) . tuplify2 . words) singlelines
         print list
-        print $ calculatePosition list
-        print $ calculateDepth list
-        print $ calculatePosition list * calculateDepth list
+        print $ calculateAdvanced 0 0 0 list
         hClose handle   
