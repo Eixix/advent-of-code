@@ -9,11 +9,6 @@ quicksort (p:xs) = lesser ++ p:greater
     lesser = quicksort $ filter (< p) xs
     greater = quicksort $ filter (>= p) xs
 
-gauss :: (Fractional a1, Integral a2) => a2 -> a1
-gauss x = (y * y + y) / 2
-    where
-        y = fromIntegral x
-
 main :: IO ()
 main = do
         let list = []
@@ -25,5 +20,5 @@ main = do
             listLength = length list
             position = listLength `div` 2
             medianElement = sorted !! position
-        print $ foldl (\x y -> x + gauss (abs (y - medianElement))) 0 list
+        print $ foldl (\x y -> x + abs (y - medianElement)) 0 list
         hClose handle
