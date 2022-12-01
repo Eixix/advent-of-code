@@ -58,11 +58,8 @@ func second() {
 	sort.Slice(sums, func(i, j int) bool {
     	return sums[i] > sums[j]
 	})
-	toReturn := 0.0
 
-	for i := 0; i < 3; i++ {
-		toReturn += sums[i]
-	}
+	toReturn := sums[0] + sums[1] + sums[2]
 
 	fmt.Println(toReturn)
 }
