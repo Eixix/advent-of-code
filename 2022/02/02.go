@@ -9,6 +9,7 @@ import (
 
 func main() {
 	first()
+	second()
 }
 
 func first() {
@@ -28,6 +29,29 @@ func first() {
 			toReturn += B(s[1])
 		case "C":
 			toReturn += C(s[1])
+		}
+	}
+
+	fmt.Println(toReturn)
+}
+
+func second() {
+	file, _ := os.Open("challenge.txt")
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	toReturn := 0
+
+	for scanner.Scan() {
+		s := strings.Split(scanner.Text(), " ")
+		switch s[0] {
+		case "A":
+			toReturn += A2(s[1])
+		case "B":
+			toReturn += B2(s[1])
+		case "C":
+			toReturn += C2(s[1])
 		}
 	}
 
@@ -68,6 +92,45 @@ func C(input string) int {
 		return 2 + 0
 	case "Z":
 		return 3 + 3
+	default:
+		panic("Can't happen")
+	}
+}
+
+func A2(input string) int {
+	switch input {
+	case "X":
+		return 2 + 6
+	case "Y":
+		return 1 + 3
+	case "Z":
+		return 3 + 0
+	default:
+		panic("Can't happen")
+	}
+}
+
+func B2(input string) int {
+	switch input {
+	case "X":
+		return 3 + 6
+	case "Y":
+		return 2 + 3
+	case "Z":
+		return 1 + 0
+	default:
+		panic("Can't happen")
+	}
+}
+
+func C2(input string) int {
+	switch input {
+	case "X":
+		return 1 + 6
+	case "Y":
+		return 3 + 3
+	case "Z":
+		return 2 + 0
 	default:
 		panic("Can't happen")
 	}
