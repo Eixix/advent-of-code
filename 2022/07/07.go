@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -52,7 +53,7 @@ func main() {
 
 	fmt.Println(addSmallerThan100K(rootDirectory))
 
-	freeSpace := 70000000 - rootDirectory.size
+	freeSpace := 30000000 - (70000000 - rootDirectory.size)
 	fmt.Println(findSmallestFolderToDelete(rootDirectory, freeSpace))
 }
 
@@ -82,24 +83,20 @@ func addSmallerThan100K(rootNode FileNode) int64 {
 	return toReturn
 }
 
-func findSmallestFolderToDelete(rootNode FileNode, freeSpace int64) FileNode {
-	var targetFreeSpace int64
-	targetFreeSpace = 30000000
-	deltaFreeSpace := targetFreeSpace - freeSpace
-
-	bestDirectory := rootNode
-
-	for _, node := range rootNode.children {
-		if node.isDirectory {
-			childBestDirectory := findSmallestFolderToDelete(*node, freeSpace)
-
-			if deltaFreeSpace-childBestDirectory.size < deltaFreeSpace-node.size {
-				bestDirectory = childBestDirectory
-			} else {
-				bestDirectory = *node
+func findSmallestFolderToDelete(rootNode FileNode, least int64) int64 {
+	var smallest int64
+	smallest = math.MaxInt64
+	for _, child := range rootNode.children {
+		if child.isDirectory {
+			smallestChild := findSmallestFolderToDelete(*child, least)
+			if smallestChild < smallest {
+				smallest = smallestChild
 			}
 		}
 	}
+	if rootNode.size >= least && rootNode.size < smallest {
+		smallest = rootNode.size
+	}
 
-	return bestDirectory
+	return smallest
 }
