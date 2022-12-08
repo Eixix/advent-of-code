@@ -90,7 +90,7 @@ func first() {
 }
 
 func second() {
-	file, _ := os.Open("small.txt")
+	file, _ := os.Open("challenge.txt")
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
@@ -106,55 +106,41 @@ func second() {
 	// Visit the trees
 	for i, column := range trees {
 		for j, tree := range column {
-			scenicScore := 1
-			// Left to right
+
+			right := 0
 			for k := j + 1; k < len(column); k++ {
-				if k == len(column)-1 && tree > column[k] {
-					scenicScore *= k - j
-					break
-				} else if tree > column[k] {
-					continue
-				} else {
-					scenicScore *= k - j
+				right++
+				if tree <= column[k] {
 					break
 				}
 			}
-			// Right to left
-			for k := j - 1; k >= 0; k-- {
-				if k == 0 && column[k] < tree {
-					scenicScore *= j - k
-					break
-				} else if column[k] < tree {
-					continue
-				} else {
-					scenicScore *= j - k
+
+			left := 0
+			for k := j - 1; 0 <= k; k-- {
+				left++
+				if tree <= column[k] {
 					break
 				}
 			}
-			// Top to bottom
+
+			top := 0
+			for k := i - 1; 0 <= k; k-- {
+				top++
+				if tree <= trees[k][j] {
+					break
+				}
+			}
+
+			bottom := 0
 			for k := i + 1; k < len(trees); k++ {
-				if k == len(trees)-1 && tree > trees[k][j] {
-					scenicScore *= k - i
-					break
-				} else if tree > trees[k][j] {
-					continue
-				} else {
-					scenicScore *= k - i
+				bottom++
+				if tree <= trees[k][j] {
 					break
 				}
 			}
-			// Bottom to top
-			for k := i - 1; k >= 0; k-- {
-				if k == 0 && trees[k][j] < tree {
-					scenicScore *= i - k
-					break
-				} else if trees[k][j] < tree {
-					continue
-				} else {
-					scenicScore *= i - k
-					break
-				}
-			}
+
+			scenicScore := top * left * right * bottom
+
 			if highestScenicScore < scenicScore {
 				highestScenicScore = scenicScore
 			}
