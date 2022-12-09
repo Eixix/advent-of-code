@@ -37,21 +37,18 @@ func first() {
 
 	for scanner.Scan() {
 		s := strings.Fields(scanner.Text())
+		amount, _ := strconv.Atoi(s[1])
 		switch s[0] {
 		case "R":
-			amount, _ := strconv.Atoi(s[1])
 			head = moveHead(head, amount, 0)
 			tail, visitedFields = moveTail(tail, head, visitedFields)
 		case "U":
-			amount, _ := strconv.Atoi(s[1])
 			head = moveHead(head, 0, amount)
 			tail, visitedFields = moveTail(tail, head, visitedFields)
 		case "L":
-			amount, _ := strconv.Atoi(s[1])
 			head = moveHead(head, -amount, 0)
 			tail, visitedFields = moveTail(tail, head, visitedFields)
 		case "D":
-			amount, _ := strconv.Atoi(s[1])
 			head = moveHead(head, 0, -amount)
 			tail, visitedFields = moveTail(tail, head, visitedFields)
 		}
@@ -83,23 +80,22 @@ func second() {
 
 	for scanner.Scan() {
 		s := strings.Fields(scanner.Text())
-		switch s[0] {
-		case "R":
-			amount, _ := strconv.Atoi(s[1])
-			head = ropeKnot{&knot1, head.x + amount, head.y}
-			tail, visitedFields = moveRope(head, visitedFields)
-		case "U":
-			amount, _ := strconv.Atoi(s[1])
-			head = ropeKnot{&knot1, head.x, head.y + amount}
-			tail, visitedFields = moveRope(head, visitedFields)
-		case "L":
-			amount, _ := strconv.Atoi(s[1])
-			head = ropeKnot{&knot1, head.x - amount, head.y}
-			tail, visitedFields = moveRope(head, visitedFields)
-		case "D":
-			amount, _ := strconv.Atoi(s[1])
-			head = ropeKnot{&knot1, head.x, head.y - amount}
-			tail, visitedFields = moveRope(head, visitedFields)
+		amount, _ := strconv.Atoi(s[1])
+		for i := 0; i < amount; i++ {
+			switch s[0] {
+			case "R":
+				head = ropeKnot{&knot1, head.x + 1, head.y}
+				tail, visitedFields = moveRope(head, visitedFields)
+			case "U":
+				head = ropeKnot{&knot1, head.x, head.y + 1}
+				tail, visitedFields = moveRope(head, visitedFields)
+			case "L":
+				head = ropeKnot{&knot1, head.x - 1, head.y}
+				tail, visitedFields = moveRope(head, visitedFields)
+			case "D":
+				head = ropeKnot{&knot1, head.x, head.y - 1}
+				tail, visitedFields = moveRope(head, visitedFields)
+			}
 		}
 	}
 
