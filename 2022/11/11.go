@@ -15,7 +15,7 @@ type Monkey struct {
 	inspections int
 }
 
-func (m *Monkey) setItems(items []string) {
+func (m Monkey) setItems(items []string) Monkey {
 	var toSet []int
 
 	for _, item := range items {
@@ -23,35 +23,37 @@ func (m *Monkey) setItems(items []string) {
 		toSet = append(toSet, convertedItem)
 	}
 
-	m.items = toSet
+	return Monkey{toSet, m.operation, m.test, m.inspections}
 }
 
-func (m *Monkey) setOperation(function []string) {
+func (m Monkey) setOperation(function []string) Monkey {
 	if function[0] == "+" {
 		if function[1] == "old" {
-			m.operation = func(i int) int { return i + i }
+			return Monkey{m.items, func(i int) int { return i + i }, m.test, m.inspections}
 		} else {
 			number, _ := strconv.Atoi(function[1])
-			m.operation = func(i int) int { return i + number }
+			return Monkey{m.items, func(i int) int { return i + number }, m.test, m.inspections}
 		}
 	} else {
 		if function[1] == "old" {
-			m.operation = func(i int) int { return i * i }
+			return Monkey{m.items, func(i int) int { return i * i }, m.test, m.inspections}
 		} else {
 			number, _ := strconv.Atoi(function[1])
-			m.operation = func(i int) int { return i * number }
+			return Monkey{m.items, func(i int) int { return i * number }, m.test, m.inspections}
 		}
 	}
 }
 
-func (m *Monkey) setTest(divisor int, trueMonkey int, falseMonkey int) {
-	m.test = func(value int) int {
+func (m Monkey) setTest(divisor int, trueMonkey int, falseMonkey int) Monkey {
+	function := func(value int) int {
 		if value%divisor == 0 {
 			return trueMonkey
 		} else {
 			return falseMonkey
 		}
 	}
+
+	return Monkey{m.items, m.operation, function, m.inspections}
 }
 
 func parseMonkeys(filename string) map[int]Monkey {
@@ -74,16 +76,16 @@ func parseMonkeys(filename string) map[int]Monkey {
 				id, _ = strconv.Atoi(s[1][:1])
 				currentMonkey = Monkey{nil, nil, nil, 0}
 			} else if s[0] == "Starting" {
-				currentMonkey.setItems(s[2:])
+				currentMonkey = currentMonkey.setItems(s[2:])
 			} else if s[0] == "Operation:" {
-				currentMonkey.setOperation(s[4:])
+				currentMonkey = currentMonkey.setOperation(s[4:])
 			} else if s[0] == "Test:" {
 				divisor, _ = strconv.Atoi(s[3])
 			} else if s[1] == "true:" {
 				trueMonkeyId, _ = strconv.Atoi(s[5])
 			} else if s[1] == "false:" {
 				falseMonkeyId, _ = strconv.Atoi(s[5])
-				currentMonkey.setTest(divisor, trueMonkeyId, falseMonkeyId)
+				currentMonkey = currentMonkey.setTest(divisor, trueMonkeyId, falseMonkeyId)
 				monkeys[id] = currentMonkey
 			}
 		}
