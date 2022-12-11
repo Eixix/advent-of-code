@@ -8,99 +8,116 @@ import (
 	"strings"
 )
 
+type Monkey struct {
+	items       []int
+	operation   func(int) int
+	test        func(int) int
+	inspections int
+}
+
+func (m *Monkey) setItems(items []string) {
+	var toSet []int
+
+	for _, item := range items {
+		convertedItem, _ := strconv.Atoi(item[:2])
+		toSet = append(toSet, convertedItem)
+	}
+
+	m.items = toSet
+}
+
+func (m *Monkey) setOperation(function []string) {
+	if function[0] == "+" {
+		if function[1] == "old" {
+			m.operation = func(i int) int { return i + i }
+		} else {
+			number, _ := strconv.Atoi(function[1])
+			m.operation = func(i int) int { return i + number }
+		}
+	} else {
+		if function[1] == "old" {
+			m.operation = func(i int) int { return i * i }
+		} else {
+			number, _ := strconv.Atoi(function[1])
+			m.operation = func(i int) int { return i * number }
+		}
+	}
+}
+
+func (m *Monkey) setTest(divisor int, trueMonkey int, falseMonkey int) {
+	m.test = func(value int) int {
+		if value%divisor == 0 {
+			return trueMonkey
+		} else {
+			return falseMonkey
+		}
+	}
+}
+
+func parseMonkeys(filename string) map[int]Monkey {
+	file, _ := os.Open(filename)
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	monkeys := make(map[int]Monkey)
+	var id int
+	var currentMonkey Monkey
+	var divisor int
+	var trueMonkeyId int
+	var falseMonkeyId int
+
+	for scanner.Scan() {
+		s := strings.Fields(scanner.Text())
+
+		if len(s) > 0 {
+			if s[0] == "Monkey" {
+				id, _ = strconv.Atoi(s[1][:1])
+				currentMonkey = Monkey{nil, nil, nil, 0}
+			} else if s[0] == "Starting" {
+				currentMonkey.setItems(s[2:])
+			} else if s[0] == "Operation:" {
+				currentMonkey.setOperation(s[4:])
+			} else if s[0] == "Test:" {
+				divisor, _ = strconv.Atoi(s[3])
+			} else if s[1] == "true:" {
+				trueMonkeyId, _ = strconv.Atoi(s[5])
+			} else if s[1] == "false:" {
+				falseMonkeyId, _ = strconv.Atoi(s[5])
+				currentMonkey.setTest(divisor, trueMonkeyId, falseMonkeyId)
+				monkeys[id] = currentMonkey
+			}
+		}
+	}
+
+	return monkeys
+}
+
 func main() {
 	first()
-	second()
 }
 
 func first() {
-	file, _ := os.Open("challenge.txt")
-	defer file.Close()
+	monkeys := parseMonkeys("small.txt")
+	fmt.Println(monkeys)
+	rounds := 20
 
-	scanner := bufio.NewScanner(file)
-	cycle := 0
-	X := 1
-	toReturn := 0
+	for i := 1; i <= rounds; i++ {
+		for j := range monkeys {
+			currentMonkey := monkeys[j]
 
-	for scanner.Scan() {
-		s := strings.Fields(scanner.Text())
-
-		if s[0] == "noop" {
-			cycle++
-			if cycle%40 == 20 {
-				toReturn += X * cycle
-			}
-		} else {
-			amount, _ := strconv.Atoi(s[1])
-			for i := 1; i <= 2; i++ {
-				cycle++
-				if cycle%40 == 20 {
-					toReturn += X * cycle
-				}
+			for _, item := range currentMonkey.items {
+				item := currentMonkey.operation(item) / 3
+				targetMonkeyId := currentMonkey.test(item)
+				currentMonkey.inspections++
+				targetMonkey := monkeys[targetMonkeyId]
+				targetMonkey.items = append(targetMonkey.items, item)
+				monkeys[targetMonkeyId] = targetMonkey
 			}
 
-			X += amount
+			currentMonkey.items = []int{}
+			monkeys[j] = currentMonkey
 		}
 	}
 
-	fmt.Println(toReturn)
-
-}
-
-func second() {
-	file, _ := os.Open("challenge.txt")
-	defer file.Close()
-
-	crt := ""
-
-	for i := 0; i < 240; i++ {
-		crt += "#"
-	}
-
-	scanner := bufio.NewScanner(file)
-	cycle := 0
-	X := 1
-
-	for scanner.Scan() {
-		s := strings.Fields(scanner.Text())
-
-		if s[0] == "noop" {
-
-			if X == cycle%40 || X == (cycle-1)%40 || X == (cycle+1)%40 && cycle != 240 {
-				crt = crt[:cycle] + "#" + crt[cycle+1:]
-			} else if X == cycle%40 || X == (cycle-1)%40 || X == (cycle+1)%40 && cycle == 240 {
-				crt = crt[:cycle] + "#"
-			} else if cycle != 240 {
-				crt = crt[:cycle] + "." + crt[cycle+1:]
-			} else {
-				crt = crt[:cycle] + "."
-			}
-
-			cycle++
-		} else {
-			amount, _ := strconv.Atoi(s[1])
-			for i := 1; i <= 2; i++ {
-
-				if X == cycle%40 || X == (cycle-1)%40 || X == (cycle+1)%40 && cycle != 240 {
-					crt = crt[:cycle] + "#" + crt[cycle+1:]
-				} else if X == cycle%40 || X == (cycle-1)%40 || X == (cycle+1)%40 && cycle == 240 {
-					crt = crt[:cycle] + "#"
-				} else if cycle != 240 {
-					crt = crt[:cycle] + "." + crt[cycle+1:]
-				} else {
-					crt = crt[:cycle] + "."
-				}
-				cycle++
-			}
-
-			X += amount
-		}
-	}
-
-	fmt.Println(crt[0:39])
-	fmt.Println(crt[40:79])
-	fmt.Println(crt[80:119])
-	fmt.Println(crt[120:159])
-	fmt.Println(crt[160:199])
-	fmt.Println(crt[200:239])
+	fmt.Println(monkeys)
 }
