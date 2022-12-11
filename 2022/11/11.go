@@ -99,12 +99,11 @@ func main() {
 }
 
 func first() {
-	monkeys := parseMonkeys("small.txt")
-	fmt.Println(monkeys)
+	monkeys := parseMonkeys("challenge.txt")
 	rounds := 20
 
 	for i := 1; i <= rounds; i++ {
-		for j := range monkeys {
+		for j := 0; j < len(monkeys); j++ {
 			currentMonkey := monkeys[j]
 
 			for _, item := range currentMonkey.items {
@@ -121,5 +120,17 @@ func first() {
 		}
 	}
 
+	first := 0
+	second := 0
+
+	for _, monkey := range monkeys {
+		if monkey.inspections > first {
+			first, second = monkey.inspections, first
+		} else if monkey.inspections > second {
+			second = monkey.inspections
+		}
+	}
+
 	fmt.Println(monkeys)
+	fmt.Println(first * second)
 }
