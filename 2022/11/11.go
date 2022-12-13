@@ -13,6 +13,7 @@ type Monkey struct {
 	operation   func(int) int
 	test        func(int) int
 	inspections int
+	divisor     int
 }
 
 func (m Monkey) setItems(items []string) Monkey {
@@ -23,23 +24,23 @@ func (m Monkey) setItems(items []string) Monkey {
 		toSet = append(toSet, convertedItem)
 	}
 
-	return Monkey{toSet, m.operation, m.test, m.inspections}
+	return Monkey{toSet, m.operation, m.test, m.inspections, m.divisor}
 }
 
 func (m Monkey) setOperation(function []string) Monkey {
 	if function[0] == "+" {
 		if function[1] == "old" {
-			return Monkey{m.items, func(i int) int { return i + i }, m.test, m.inspections}
+			return Monkey{m.items, func(i int) int { return i + i }, m.test, m.inspections, m.divisor}
 		} else {
 			number, _ := strconv.Atoi(function[1])
-			return Monkey{m.items, func(i int) int { return i + number }, m.test, m.inspections}
+			return Monkey{m.items, func(i int) int { return i + number }, m.test, m.inspections, m.divisor}
 		}
 	} else {
 		if function[1] == "old" {
-			return Monkey{m.items, func(i int) int { return i * i }, m.test, m.inspections}
+			return Monkey{m.items, func(i int) int { return i * i }, m.test, m.inspections, m.divisor}
 		} else {
 			number, _ := strconv.Atoi(function[1])
-			return Monkey{m.items, func(i int) int { return i * number }, m.test, m.inspections}
+			return Monkey{m.items, func(i int) int { return i * number }, m.test, m.inspections, m.divisor}
 		}
 	}
 }
@@ -53,7 +54,7 @@ func (m Monkey) setTest(divisor int, trueMonkey int, falseMonkey int) Monkey {
 		}
 	}
 
-	return Monkey{m.items, m.operation, function, m.inspections}
+	return Monkey{m.items, m.operation, function, m.inspections, m.divisor}
 }
 
 func parseMonkeys(filename string) map[int]Monkey {
@@ -74,7 +75,7 @@ func parseMonkeys(filename string) map[int]Monkey {
 		if len(s) > 0 {
 			if s[0] == "Monkey" {
 				id, _ = strconv.Atoi(s[1][:1])
-				currentMonkey = Monkey{nil, nil, nil, 0}
+				currentMonkey = Monkey{nil, nil, nil, 0, 0}
 			} else if s[0] == "Starting" {
 				currentMonkey = currentMonkey.setItems(s[2:])
 			} else if s[0] == "Operation:" {
@@ -86,6 +87,7 @@ func parseMonkeys(filename string) map[int]Monkey {
 			} else if s[1] == "false:" {
 				falseMonkeyId, _ = strconv.Atoi(s[5])
 				currentMonkey = currentMonkey.setTest(divisor, trueMonkeyId, falseMonkeyId)
+				currentMonkey.divisor = divisor
 				monkeys[id] = currentMonkey
 			}
 		}
@@ -96,6 +98,7 @@ func parseMonkeys(filename string) map[int]Monkey {
 
 func main() {
 	first()
+	second()
 }
 
 func first() {
@@ -133,4 +136,47 @@ func first() {
 
 	fmt.Println(monkeys)
 	fmt.Println(first * second)
+}
+
+func second() {
+	monkeys := parseMonkeys("challenge.txt")
+	rounds := 10000
+	div := 1
+
+	for _, monkey := range monkeys {
+		div *= monkey.divisor
+	}
+
+	for i := 1; i <= rounds; i++ {
+
+		for j := 0; j < len(monkeys); j++ {
+			currentMonkey := monkeys[j]
+
+			for _, item := range currentMonkey.items {
+				item := currentMonkey.operation(item) % div
+				targetMonkeyId := currentMonkey.test(item)
+				currentMonkey.inspections++
+				targetMonkey := monkeys[targetMonkeyId]
+				targetMonkey.items = append(targetMonkey.items, item)
+				monkeys[targetMonkeyId] = targetMonkey
+			}
+
+			currentMonkey.items = []int{}
+			monkeys[j] = currentMonkey
+		}
+	}
+
+	first := 0
+	second := 0
+
+	for _, monkey := range monkeys {
+		if monkey.inspections > first {
+			first, second = monkey.inspections, first
+		} else if monkey.inspections > second {
+			second = monkey.inspections
+		}
+	}
+
+	fmt.Println(monkeys)
+	fmt.Println(first*second, div)
 }
