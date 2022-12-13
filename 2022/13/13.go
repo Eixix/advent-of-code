@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"os"
 )
 
@@ -15,7 +14,7 @@ func parseCharacters(line string, smaller bool, writeChannel chan rune, readChan
 	inRightOrder := true
 
 	inList := 0
-	json.Unmarshal(line)
+	// json.Unmarshal(line)
 	for _, v := range line {
 		if v == '[' {
 			inList++

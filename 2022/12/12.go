@@ -108,7 +108,7 @@ func getMinDistanceNode(Q []Node) Node {
 	return toReturn
 }
 
-func dijkstra(graph []Node, start int) []Node {
+func dijkstra(graph []Node, start int, end int) []Node {
 	Q := []Node{}
 
 	graph[start].cost = 0
@@ -120,6 +120,11 @@ func dijkstra(graph []Node, start int) []Node {
 
 	for len(Q) != deleted {
 		minDistanceNode := getMinDistanceNode(Q)
+
+		if minDistanceNode.id == end {
+			return graph
+		}
+
 		Q[minDistanceNode.id].deleted = true
 		deleted++
 
@@ -141,7 +146,15 @@ func first() {
 	elevationMap, rowLength := parseText("small.txt")
 	start, end := getStartAndEndNode(elevationMap)
 	graph := walkAndMap(elevationMap, start, end, rowLength)
-	fmt.Println(dijkstra(graph, start))
-	//nodes := make(map[int]Node)
+	walkedGraph := dijkstra(graph, start, end)
+
+	node := walkedGraph[end]
+	fmt.Println(walkedGraph, node)
+
+	steps := 0
+	for node.id != start {
+		node = walkedGraph[node.precessor]
+		steps++
+	}
 
 }
