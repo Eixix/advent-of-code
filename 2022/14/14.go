@@ -24,18 +24,24 @@ func coordinatesToString(x int, y int) string {
 	return strconv.Itoa(x) + "," + strconv.Itoa(y)
 }
 
-func parseMap(filename string) map[string]string {
+func parseMap(filename string) (map[string]string, int) {
 	file, _ := os.Open(filename)
 	defer file.Close()
 
 	caveMap := make(map[string]string)
 	scanner := bufio.NewScanner(file)
+	floor := 0
 	for scanner.Scan() {
 		combinedCoordinates := strings.Split(scanner.Text(), " -> ")
 		stone := [][]int{}
+
 		for _, v := range combinedCoordinates {
 			x, y := stringToCoordinates(v)
 			stone = append(stone, []int{x, y})
+
+			if y > floor {
+				floor = y
+			}
 		}
 		for i := 0; i < len(stone); i++ {
 			x1 := stone[i][0]
@@ -69,10 +75,10 @@ func parseMap(filename string) map[string]string {
 		}
 	}
 
-	return caveMap
+	return caveMap, floor + 2
 }
 
-func dropSand(dropLocation string, caveMap map[string]string, abyssCounter int) (bool, map[string]string) {
+func dropSand(dropLocation string, caveMap map[string]string, floor int, isStart bool) (bool, map[string]string) {
 
 	x, y := stringToCoordinates(dropLocation)
 	straightDown := coordinatesToString(x, y+1)
@@ -83,16 +89,14 @@ func dropSand(dropLocation string, caveMap map[string]string, abyssCounter int) 
 	_, leftDiagonalIsBlocked := caveMap[leftDiagonal]
 	_, rightDiagonalIsBlocked := caveMap[rightDiagonal]
 
-	if abyssCounter > 1000 {
+	if !straightDownIsBlocked && y+1 < floor {
+		return dropSand(straightDown, caveMap, floor, false)
+	} else if !leftDiagonalIsBlocked && y+1 < floor {
+		return dropSand(leftDiagonal, caveMap, floor, false)
+	} else if !rightDiagonalIsBlocked && y+1 < floor {
+		return dropSand(rightDiagonal, caveMap, floor, false)
+	} else if x == 500 && y == 0 {
 		return true, caveMap
-	}
-
-	if !straightDownIsBlocked {
-		return dropSand(straightDown, caveMap, abyssCounter+1)
-	} else if !leftDiagonalIsBlocked {
-		return dropSand(leftDiagonal, caveMap, abyssCounter+1)
-	} else if !rightDiagonalIsBlocked {
-		return dropSand(rightDiagonal, caveMap, abyssCounter+1)
 	}
 
 	caveMap[dropLocation] = "+"
@@ -100,12 +104,12 @@ func dropSand(dropLocation string, caveMap map[string]string, abyssCounter int) 
 }
 
 func first() {
-	caveMap := parseMap("challenge.txt")
-	abyss := false
-	resting := -1
+	caveMap, floor := parseMap("challenge.txt")
+	clogged := false
+	resting := 0
 
-	for !abyss {
-		abyss, caveMap = dropSand("500,0", caveMap, 0)
+	for !clogged {
+		clogged, caveMap = dropSand("500,0", caveMap, floor, true)
 		resting++
 	}
 	fmt.Println(resting)
