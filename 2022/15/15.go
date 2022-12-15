@@ -11,6 +11,15 @@ import (
 func main() {
 	first()
 }
+
+type Sensor struct {
+	sensorX           int
+	sensorY           int
+	beaconX           int
+	beaconY           int
+	manhattanDistance int
+}
+
 func abs(x int) int {
 	if x < 0 {
 		return -x
@@ -30,11 +39,13 @@ func coordinatesToString(x int, y int) string {
 	return strconv.Itoa(x) + "," + strconv.Itoa(y)
 }
 
-func parseFile(filename string) map[string]string {
+func parseFile(filename string) ([]Sensor, int, int) {
 	file, _ := os.Open(filename)
 	defer file.Close()
 
-	beaconSensorMap := make(map[string]string)
+	sensors := []Sensor{}
+	var minX int
+	var maxX int
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -43,51 +54,41 @@ func parseFile(filename string) map[string]string {
 		sensorY, _ := strconv.Atoi(s[3][2 : len(s[3])-1])
 		beaconX, _ := strconv.Atoi(s[8][2 : len(s[8])-1])
 		beaconY, _ := strconv.Atoi(s[9][2:len(s[9])])
-		beaconSensorMap[coordinatesToString(sensorX, sensorY)] = "S"
-		beaconSensorMap[coordinatesToString(beaconX, beaconY)] = "B"
 
 		manhattanDistance := abs(sensorX-beaconX) + abs(sensorY-beaconY)
 
-		for i := 1; i < manhattanDistance; i++ {
-			if sensorY == 2000000 && beaconSensorMap[coordinatesToString(sensorX+i, sensorY)] != "B" {
-				beaconSensorMap[coordinatesToString(sensorX+i, sensorY)] = "#"
-			} else if sensorY == 2000000 && beaconSensorMap[coordinatesToString(sensorX-i, sensorY)] != "B" {
-				beaconSensorMap[coordinatesToString(sensorX-i, sensorY)] = "#"
-			} else if sensorY+i == 2000000 && beaconSensorMap[coordinatesToString(sensorX, sensorY+i)] != "B" {
-				beaconSensorMap[coordinatesToString(sensorX, sensorY+i)] = "#"
-			} else if sensorY-i == 2000000 && beaconSensorMap[coordinatesToString(sensorX, sensorY-i)] != "B" {
-				beaconSensorMap[coordinatesToString(sensorX, sensorY-i)] = "#"
-			}
-			for j := 1; j <= manhattanDistance-i; j++ {
-				if sensorY+j == 2000000 && beaconSensorMap[coordinatesToString(sensorX+i, sensorY+j)] != "B" {
-					beaconSensorMap[coordinatesToString(sensorX+i, sensorY+j)] = "#"
-				} else if sensorY-j == 2000000 && beaconSensorMap[coordinatesToString(sensorX+i, sensorY-j)] != "B" {
-					beaconSensorMap[coordinatesToString(sensorX+i, sensorY-j)] = "#"
-				}
-			}
-			for j := 1; j <= manhattanDistance-i; j++ {
-				if sensorY+j == 2000000 && beaconSensorMap[coordinatesToString(sensorX-i, sensorY+j)] != "B" {
-					beaconSensorMap[coordinatesToString(sensorX-i, sensorY+j)] = "#"
-				} else if sensorY-j == 2000000 && beaconSensorMap[coordinatesToString(sensorX-i, sensorY-j)] != "B" {
-					beaconSensorMap[coordinatesToString(sensorX-i, sensorY-j)] = "#"
-				}
-			}
+		if beaconX-manhattanDistance < minX {
+			minX = beaconX - manhattanDistance
 		}
+		if maxX < beaconX+manhattanDistance {
+			maxX = beaconX + manhattanDistance
+		}
+
+		sensors = append(sensors, Sensor{sensorX, sensorY, beaconX, beaconY, manhattanDistance})
 	}
 
-	return beaconSensorMap
+	return sensors, minX, maxX
 }
 
 func first() {
-	beaconSensorMap := parseFile("challenge.txt")
+	sensors, minX, maxX := parseFile("challenge.txt")
+	y := 2000000
 	toReturn := 0
 
-	for i, v := range beaconSensorMap {
-		_, y := stringToCoordinates(i)
-		if y == 2000000 && v == "#" {
-			toReturn++
+	for x := minX; x <= maxX; x++ {
+		for _, sensor := range sensors {
+			if abs(sensor.sensorX-x)+abs(sensor.sensorY-y) <= sensor.manhattanDistance {
+				for _, innerSensor := range sensors {
+					if x == innerSensor.beaconX && y == innerSensor.beaconY {
+						toReturn--
+						break
+					}
+				}
+				toReturn++
+				break
+			}
 		}
 	}
 
-	fmt.Println(toReturn, beaconSensorMap)
+	fmt.Println(toReturn)
 }
