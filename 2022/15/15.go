@@ -82,19 +82,48 @@ func first() {
 	fmt.Println(toReturn)
 }
 
-func parallelSearch(channel chan int, max int, x int, sensors []Sensor) {
-	for y := 0; y <= max; y++ {
-		inSensors := false
-		for _, sensor := range sensors {
-			if abs(sensor.sensorX-x)+abs(sensor.sensorY-y) <= sensor.manhattanDistance {
-				inSensors = true
-				break
+func parallelSearch(channel chan int, max int, sensor Sensor, sensors []Sensor) {
+	for x := sensor.sensorX - sensor.manhattanDistance - 1; x <= sensor.sensorX; x++ {
+		y := sensor.sensorY - (x - (sensor.sensorX - sensor.manhattanDistance - 1))
+		notInAnySensor := true
+		for _, innerSensor := range sensors {
+			if (abs(innerSensor.sensorX-x)+abs(innerSensor.sensorY-y) <= innerSensor.manhattanDistance) && x >= 0 && x <= max && y >= 0 && y <= max {
+				notInAnySensor = false
 			}
 		}
-		if inSensors {
-			continue
+		if notInAnySensor && x >= 0 && x <= max && y >= 0 && y <= max {
+			channel <- x*4000000 + y
 		}
-		channel <- x*4000000 + y
+		y = sensor.sensorY + (x - (sensor.sensorX - sensor.manhattanDistance - 1))
+		for _, innerSensor := range sensors {
+			if (abs(innerSensor.sensorX-x)+abs(innerSensor.sensorY-y) <= innerSensor.manhattanDistance) && x >= 0 && x <= max && y >= 0 && y <= max {
+				notInAnySensor = false
+			}
+		}
+		if notInAnySensor && x >= 0 && x <= max && y >= 0 && y <= max {
+			channel <- x*4000000 + y
+		}
+	}
+	for x := sensor.sensorX; x <= sensor.sensorX+sensor.manhattanDistance+1; x++ {
+		y := (sensor.sensorY + sensor.manhattanDistance + 1) - (x - sensor.sensorX)
+		notInAnySensor := true
+		for _, innerSensor := range sensors {
+			if (abs(innerSensor.sensorX-x)+abs(innerSensor.sensorY-y) <= innerSensor.manhattanDistance) && x >= 0 && x <= max && y >= 0 && y <= max {
+				notInAnySensor = false
+			}
+		}
+		if notInAnySensor && x >= 0 && x <= max && y >= 0 && y <= max {
+			channel <- x*4000000 + y
+		}
+		y = (sensor.sensorY - sensor.manhattanDistance - 1) + (x - sensor.sensorX)
+		for _, innerSensor := range sensors {
+			if (abs(innerSensor.sensorX-x)+abs(innerSensor.sensorY-y) <= innerSensor.manhattanDistance) && x >= 0 && x <= max && y >= 0 && y <= max {
+				notInAnySensor = false
+			}
+		}
+		if notInAnySensor && x >= 0 && x <= max && y >= 0 && y <= max {
+			channel <- x*4000000 + y
+		}
 	}
 }
 
@@ -104,8 +133,9 @@ func second() {
 
 	resultChannel := make(chan int)
 
-	for x := 0; x <= max; x++ {
-		go parallelSearch(resultChannel, max, x, sensors)
+	for _, sensor := range sensors {
+		go parallelSearch(resultChannel, max, sensor, sensors)
+		//parallelSearch(resultChannel, max, sensors[0], sensors)
 	}
 
 	fmt.Println(<-resultChannel)
