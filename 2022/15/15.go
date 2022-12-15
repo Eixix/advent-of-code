@@ -10,6 +10,7 @@ import (
 
 func main() {
 	first()
+	second()
 }
 
 type Sensor struct {
@@ -91,4 +92,33 @@ func first() {
 	}
 
 	fmt.Println(toReturn)
+}
+
+func parallelSearch(channel chan int, max int, x int, sensors []Sensor) {
+	for y := 0; y <= max; y++ {
+		inSensors := false
+		for _, sensor := range sensors {
+			if abs(sensor.sensorX-x)+abs(sensor.sensorY-y) <= sensor.manhattanDistance {
+				inSensors = true
+				break
+			}
+		}
+		if inSensors {
+			continue
+		}
+		channel <- x*4000000 + y
+	}
+}
+
+func second() {
+	sensors, _, _ := parseFile("challenge.txt")
+	max := 4000000
+
+	resultChannel := make(chan int)
+
+	for x := 0; x <= max; x++ {
+		go parallelSearch(resultChannel, max, x, sensors)
+	}
+
+	fmt.Println(<-resultChannel)
 }
