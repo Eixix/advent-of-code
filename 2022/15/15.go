@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	first()
+	//first()
 	second()
 }
 
@@ -26,18 +26,6 @@ func abs(x int) int {
 		return -x
 	}
 	return x
-}
-
-func stringToCoordinates(coordinateString string) (int, int) {
-	coordinates := strings.Split(coordinateString, ",")
-	x, _ := strconv.Atoi(coordinates[0])
-	y, _ := strconv.Atoi(coordinates[1])
-
-	return x, y
-}
-
-func coordinatesToString(x int, y int) string {
-	return strconv.Itoa(x) + "," + strconv.Itoa(y)
 }
 
 func parseFile(filename string) ([]Sensor, int, int) {
