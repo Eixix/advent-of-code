@@ -135,7 +135,6 @@ func second() {
 
 	for _, sensor := range sensors {
 		go parallelSearch(resultChannel, max, sensor, sensors)
-		//parallelSearch(resultChannel, max, sensors[0], sensors)
 	}
 
 	fmt.Println(<-resultChannel)
