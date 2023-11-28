@@ -5,7 +5,7 @@ use std::path::Path;
 fn main() {
     if let Ok(lines) = read_lines("./small.txt") {
         // Consumes the iterator, returns an (Optional) String
-        for first in lines.iter() {
+        for first in lines {
             let firstInt = first.unwrap().parse::<i32>().unwrap();
             for second in lines {
                 let secondInt = second.unwrap().parse::<i32>().unwrap();
