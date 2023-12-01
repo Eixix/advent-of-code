@@ -44,7 +44,7 @@ convertToPureDigits (x : xs)
   | otherwise = convertToPureDigits xs
 
 appendDigits :: [Char] -> [Char]
-appendDigits xs = head (filter isDigit (convertToPureDigits xs)) : [last (filter isDigit (convertToPureDigits xs))]
+appendDigits xs = head (convertToPureDigits xs) : [last (convertToPureDigits xs)]
 
 main :: IO ()
 main = do
