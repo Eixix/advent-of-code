@@ -6,25 +6,55 @@ import System.IO
     hGetContents,
     openFile,
   )
+import Data.List (elemIndex)
+import Data.Maybe (fromJust)
+import qualified Data.Bifunctor
+import Debug.Trace
 
--- 5 and 8 for small.txt
--- 10 and 25 for challenge.txt
-getWinningLineAndCard :: [String] -> ([Int], [Int])
-getWinningLineAndCard xs = (map read (take 10 xs), map read (take 25 (reverse xs)))
+isDigit :: Char -> Bool
+isDigit x
+  | x == '0' = True
+  | x == '1' = True
+  | x == '2' = True
+  | x == '3' = True
+  | x == '4' = True
+  | x == '5' = True
+  | x == '6' = True
+  | x == '7' = True
+  | x == '8' = True
+  | x == '9' = True
+  | otherwise = False
 
-numberOfOverlaps :: (Num a1, Foldable t, Eq a2) => t a2 -> Bool -> [a2] -> a1
-numberOfOverlaps xs isWinner [] = if isWinner then 1 else 0
-numberOfOverlaps xs isWinner (y:ys) = if y `elem` xs then 2 * numberOfOverlaps xs True ys else numberOfOverlaps xs (isWinner || False) ys
+splitInIndividualLists :: [String] -> [[String]]
+splitInIndividualLists [] = []
+splitInIndividualLists xs = takeWhile (/= []) xs : splitInIndividualLists (drop 1 (dropWhile (/= "") xs))
 
-getPointsPerGame :: (Integral a, Foldable t, Eq a2) => (t a2, [a2]) -> a
-getPointsPerGame (winners, draws) = div (numberOfOverlaps winners False draws) 2
+getEntries :: [String] -> [Int]
+getEntries xs = filter (/= -1) (map (\x -> if isDigit (head x) then (read x :: Int) else -1) xs)
+
+convertToRange :: [Int] -> ([Int], [Int])
+convertToRange (destination:source:range) =  ([destination..(destination + (head range-1))], [source..(source + (head range-1))])
+
+mergeRanges :: [([Int], [Int])] -> ([Int], [Int])
+mergeRanges ((a,b):xs) = Data.Bifunctor.bimap (a ++) (b ++) (head xs)
+
+convertToRanges :: [[Int]] -> [([Int], [Int])]
+convertToRanges = map convertToRange
+
+getDestinationFromSource :: Int-> ([Int], [Int]) -> Int
+getDestinationFromSource source (destinations, sources) = if source `elem` sources then destinations !! fromJust (elemIndex source sources) else source
+
+mapSeed :: [([Int], [Int])] -> Int -> Int
+mapSeed maps seed = foldl getDestinationFromSource seed maps
+
 
 main :: IO ()
 main = do
-  handle <- openFile "challenge.txt" ReadMode
+  handle <- openFile "small.txt" ReadMode
   contents <- hGetContents handle
   let singlelines = lines contents
-      winnersAndDraws = map (getWinningLineAndCard . drop 2 . words) singlelines
-      result = sum $ map getPointsPerGame winnersAndDraws
-  print result
+      filteredElements = map (filter (not . null) . map (getEntries . words)) (splitInIndividualLists singlelines)
+      seeds = head $ head filteredElements
+      maps = map (mergeRanges . convertToRanges) (tail filteredElements)
+  print $ map (mapSeed maps) seeds
   hClose handle
