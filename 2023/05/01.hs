@@ -33,15 +33,16 @@ getEntries :: [String] -> [Int]
 getEntries xs = filter (/= -1) (map (\x -> if isDigit (head x) then (read x :: Int) else -1) xs)
 
 convertToRange :: [Int] -> ([Int], [Int])
-convertToRange (destination:source:range) =  ([destination..(destination + (head range-1))], [source..(source + (head range-1))])
+convertToRange (destination:source:range) = ([destination..(destination + (head range-1))], [source..(source + (head range-1))])
 
 mergeRanges :: [([Int], [Int])] -> ([Int], [Int])
-mergeRanges ((a,b):xs) = Data.Bifunctor.bimap (a ++) (b ++) (head xs)
+mergeRanges = foldr
+      (\ x -> Data.Bifunctor.bimap (fst x ++) (snd x ++)) ([], [])
 
 convertToRanges :: [[Int]] -> [([Int], [Int])]
 convertToRanges = map convertToRange
 
-getDestinationFromSource :: Int-> ([Int], [Int]) -> Int
+getDestinationFromSource :: Int -> ([Int], [Int]) -> Int
 getDestinationFromSource source (destinations, sources) = if source `elem` sources then destinations !! fromJust (elemIndex source sources) else source
 
 mapSeed :: [([Int], [Int])] -> Int -> Int
@@ -50,11 +51,12 @@ mapSeed maps seed = foldl getDestinationFromSource seed maps
 
 main :: IO ()
 main = do
-  handle <- openFile "small.txt" ReadMode
+  handle <- openFile "challenge.txt" ReadMode
   contents <- hGetContents handle
   let singlelines = lines contents
       filteredElements = map (filter (not . null) . map (getEntries . words)) (splitInIndividualLists singlelines)
       seeds = head $ head filteredElements
       maps = map (mergeRanges . convertToRanges) (tail filteredElements)
+  --print $ minimum (map (mapSeed maps) seeds)
   print $ map (mapSeed maps) seeds
   hClose handle
